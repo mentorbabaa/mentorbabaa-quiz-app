@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    #timer {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .question-block {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h3 {
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    input[type="radio"] {
+      margin-right: 8px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+
+  <script>
+    let current = 0;
+    let answers = {};
+    let timer;
+    let timeLeft = 30;
+
+    function startTimer() {
+      timeLeft = 30;
+      document.getElementById("timer").innerText = "Time Left: 30s";
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = "Time Left: " + timeLeft + "s";
+        if (timeLeft <= 0) {
+          next();
+        }
+      }, 1000);
+    }
+
+    function showQuestion(index) {
+      clearInterval(timer);
+      current = index;
+      let questions = document.querySelectorAll(".question-block");
+      questions.forEach((q, i) => q.style.display = i === index ? "block" : "none");
+      startTimer();
+    }
+
+    function next() {
+      let selected = document.querySelector('input[name="q' + current + '"]:checked');
+      if (selected) {
+        answers[selected.name.slice(1)] = selected.value;
+      }
+      if (current + 1 < {{ questions|length }}) {
+        showQuestion(current + 1);
+      } else {
+        submitQuiz();
+      }
+    }
+
+    function submitQuiz() {
+      clearInterval(timer);
+      fetch('/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(answers)
+      }).then(res => res.json()).then(data => {
+        window.location.href = "/result";
+      });
+    }
+
+    window.onload = () => {
+      showQuestion(0);
+    };
+  </script>
+</head>
+<body>
+  <div id="timer"></div>
+  {% for q in questions %}
+  <div class="question-block" style="display:none;">
+    <h3>{{ q.question }}</h3>
+    <label><input type="radio" name="q{{ loop.index0 }}" value="A"> {{ q.option_a }}</label>
+    <label><input type="radio" name="q{{ loop.index0 }}" value="B"> {{ q.option_b }}</label>
+    <label><input type="radio" name="q{{ loop.index0 }}" value="C"> {{ q.option_c }}</label>
+    <label><input type="radio" name="q{{ loop.index0 }}" value="D"> {{ q.option_d }}</label>
+    <button onclick="next()">Next</button>
+  </div>
+  {% endfor %}
+</body>
+</html>
