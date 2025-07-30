@@ -5,7 +5,7 @@
 
 ### Requirements
 - Python 3.8+
-- MySQL Server
+- SQLite for Local and MySQL Server for AWS or remote server.
 - pip packages listed in `requirements.txt`
 
 ### Steps
